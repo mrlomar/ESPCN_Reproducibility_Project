@@ -37,3 +37,29 @@ def PS_inv(img, r):
             for c in range(len(img[x][y])):
                 res[floor(x/r)][floor(y/r)][C*r*(y % r) + C*(x % r) + c] = img[x][y][c]
     return res
+
+def shuffle_loss(output, target, r=4):
+	# Simply a custom loss function with the periodic shuffle built in
+	# Using this allows us to read in the images without reverse shuffling for training
+	# Might be slower because of the calculations, but still interesting to try
+	# The paper does not specify what to do with the colour channels
+	res = 0
+	rW = len(target)
+	rH = len(target[0])
+	C = len(target[0][0])
+
+	for x in range(rW):
+		for y in range(rH):
+			for c in range(C):
+				res += (target[x][y][c] - output[floor(x/r)][floor(y/r)][C*r*(y % r) + C*(x % r) + c])**2
+
+	return res / (rW*rH*c)
+
+random_img = np.random.rand(16, 16, 3)
+exp_output = PS_inv(random_img, 4)
+print(exp_output.shape)
+print(shuffle_loss(exp_output, random_img))
+
+noisy_output = exp_output + np.random.rand(4, 4, 48)*0.01
+print(shuffle_loss(noisy_output, random_img))
+
