@@ -132,4 +132,4 @@ dmypy.json
 .idea/
 *.pdf
 # Ignore the datasets folder
-.datasets/
+datasets/
