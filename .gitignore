@@ -133,3 +133,5 @@ dmypy.json
 *.pdf
 # Ignore the datasets folder
 datasets/
+# Ignore the models folder
+models/
