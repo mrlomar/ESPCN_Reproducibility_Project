@@ -98,7 +98,7 @@ def average_PSNR(folder, net, r):
         if img is not None:
             img = resize(img, ((img.shape[0] // r) * r, (img.shape[1] // r) * r))
             images.append(img)
-            
+	
     sumPSNR = 0
     for og_img in images:
         img = resize(og_img, (og_img.shape[0] // 3, og_img.shape[1] // 3))
@@ -109,6 +109,7 @@ def average_PSNR(folder, net, r):
         img = torch.Tensor(img).unsqueeze(0).double()
         result = net(img).detach().numpy()
         sumPSNR += PSNR(PS(result[0], r) * 255, og_img * 255)
+	
     return sumPSNR / len(images)
 
 """
@@ -287,16 +288,17 @@ while True:  # loop over the dataset multiple times
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))
 
+net.cpu()
 set5_PSNR = average_PSNR("datasets/testing/Set5", net, r)
-set14_PSNR = average_PSNR("datasets/testing/Set5", net, r)
+set14_PSNR = average_PSNR("datasets/testing/Set14", net, r)
 
-torch.save(net.state_dict(), "models/trained_model_%.5f_%.5f" % (set5_PSNR, set14_PSNR))
+torch.save(net.state_dict(), "models/trained_model_" + str(set14_PSNR))
 
 print("Finished validation \n")
 
 print("dataset:               " + dataset)
-print("psnr Set5:             " + set5_PSNR)
-print("psnr Set14:            " + set14_PSNR)
+print("psnr Set5:             " + str(set5_PSNR))
+print("psnr Set14:            " + str(set14_PSNR))
 print("loss on training set:  " + str(epoch_loss))
 print("loss on test set:      " + "X")
 print("r:                     " + str(r))
@@ -308,4 +310,4 @@ print("no_learning_threshold: " + str(no_learning_threshold))
 print("epochs:                " + str(epoch + 1))
 print("training duration:     " + str(end_time - start_time))
 print("minibatch_size:        " + str(minibatch_size))
-print("model saved as:        " + "X")
+print("model saved as:        " + "models/trained_model_" + str(set14_PSNR))
