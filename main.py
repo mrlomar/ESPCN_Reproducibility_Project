@@ -1,23 +1,14 @@
 import datetime
-
-import matplotlib
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import torchvision
-from torchvision.utils import save_image
-import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import misc
-from PIL import Image, ImageFilter
-from scipy.ndimage.filters import gaussian_filter
 from skimage.filters import *
 from skimage.transform import *
 import os
 import math
-from math import floor
 
 # hyperparameters
 r = 3  # upscaling ratio
@@ -35,6 +26,7 @@ use_gpu = torch.cuda.is_available()
 
 # Constants
 C = 3  # colour channels
+repeats = 100  # the number of consecutive epochs the improvement will have to be below the no_learning_threshold
 
 
 def imshow(img):
@@ -239,7 +231,7 @@ while True:  # loop over the dataset multiple times
     else:
         ni_counter = 0
 
-    if ni_counter >= 100:  # stop training if no improvement has been made for 100 epochs
+    if ni_counter >= repeats:  # stop training if no improvement has been made for 100 epochs
         break
 
     # If  the improvement is too small, make the learning rate smaller
