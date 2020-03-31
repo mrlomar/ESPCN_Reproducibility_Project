@@ -1,18 +1,10 @@
 import datetime
-
-import matplotlib
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import torchvision
-from torchvision.utils import save_image
-import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import misc
-from PIL import Image, ImageFilter
-from scipy.ndimage.filters import gaussian_filter
 from skimage.filters import *
 from skimage.transform import *
 import os
@@ -35,6 +27,7 @@ use_gpu = torch.cuda.is_available()
 
 # Constants
 C = 3  # colour channels
+repeats = 100  # the number of consecutive epochs the improvement will have to be below the no_learning_threshold
 
 
 def imshow(img):
@@ -82,27 +75,29 @@ def PS_inv(img, r):
                 res[x // r][y // r][C * r * (y % r) + C * (x % r) + c] = img[x][y][c]
     return res
 
-def PSNR(original, compressed): 
-    mse = np.mean((original - compressed) ** 2) 
-    if(mse == 0):  # MSE is zero means no noise is present in the signal . 
-                  # Therefore PSNR have no importance. 
+
+def PSNR(original, compressed):
+    mse = np.mean((original - compressed) ** 2)
+    if (mse == 0):  # MSE is zero means no noise is present in the signal .
+        # Therefore PSNR have no importance.
         return 100
     max_pixel = 255.0
-    psnr = 20 * log10(max_pixel / sqrt(mse)) 
-    return psnr 
+    psnr = 20 * log10(max_pixel / sqrt(mse))
+    return psnr
+
 
 def average_PSNR(folder, net, r):
     images = []
     for filename in os.listdir(folder):
-        img = plt.imread(os.path.join(folder,filename))
+        img = plt.imread(os.path.join(folder, filename))
         if img is not None:
             img = resize(img, ((img.shape[0] // r) * r, (img.shape[1] // r) * r))
             images.append(img)
-	
+
     sumPSNR = 0
     for og_img in images:
         img = resize(og_img, (og_img.shape[0] // 3, og_img.shape[1] // 3))
-        if (len(img.shape) == 2): # convert image to rgb if it is grayscale
+        if (len(img.shape) == 2):  # convert image to rgb if it is grayscale
             img = np.stack((img, img, img), axis=2)
             og_img = np.stack((og_img, og_img, og_img), axis=2)
         img = np.transpose(img, (2, 0, 1))
@@ -111,6 +106,7 @@ def average_PSNR(folder, net, r):
         sumPSNR += PSNR(PS(result[0], r) * 255, og_img * 255)
 	
     return sumPSNR / len(images)
+
 
 """
 Downsample images
@@ -261,14 +257,14 @@ while True:  # loop over the dataset multiple times
     epoch_loss = epoch_loss / len(inputs)
     print(epoch + 1, epoch_loss)
 
-    improvement = abs(last_epoch_loss - epoch_loss)
+    improvement = abs(last_epoch_loss - epoch_loss)  # TODO Olivier use test set
     print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
     if improvement < no_learning_threshold:
         ni_counter += 1
     else:
         ni_counter = 0
 
-    if ni_counter >= 100:  # stop training if no improvement has been made for 100 epochs
+    if ni_counter >= repeats:  # stop training if no improvement has been made for 100 epochs
         break
 
     # If  the improvement is too small, make the learning rate smaller
@@ -297,10 +293,10 @@ torch.save(net.state_dict(), "models/trained_model_" + str(set14_PSNR))
 print("Finished validation \n")
 
 print("dataset:               " + dataset)
-print("psnr Set5:             " + str(set5_PSNR))
+print("loss on training set:  " + str(epoch_loss))  # TODO Olivier edit this
 print("psnr Set14:            " + str(set14_PSNR))
-print("loss on training set:  " + str(epoch_loss))
-print("loss on test set:      " + "X")
+print("psnr Set5:             " + str(set5_PSNR))
+print("loss on test set:      " + "X")  # TODO Olivier edit this
 print("r:                     " + str(r))
 print("blur:                  " + str(blur))
 print("lr_start:              " + str(lr_start))
