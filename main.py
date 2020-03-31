@@ -256,7 +256,7 @@ while True:  # loop over the dataset multiple times
     epoch_loss = epoch_loss / len(inputs)
     print(epoch + 1, epoch_loss)
 
-    improvement = abs(last_epoch_loss - epoch_loss)
+    improvement = abs(last_epoch_loss - epoch_loss)  # TODO Olivier use test set
     print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
     if improvement < no_learning_threshold:
         ni_counter += 1
@@ -293,8 +293,8 @@ print("Finished validation \n")
 print("dataset:               " + dataset)
 print("psnr Set5:             " + str(set5_PSNR))
 print("psnr Set14:            " + str(set14_PSNR))
-print("loss on training set:  " + str(epoch_loss))
-print("loss on test set:      " + "X")
+print("loss on training set:  " + str(epoch_loss))  # TODO Olivier edit this
+print("loss on test set:      " + "X")  # TODO Olivier edit this
 print("r:                     " + str(r))
 print("blur:                  " + str(blur))
 print("lr_start:              " + str(lr_start))
