@@ -9,6 +9,7 @@ from skimage.filters import *
 from skimage.transform import *
 import os
 import math
+from math import floor, log10, sqrt
 
 # hyperparameters
 r = 3  # upscaling ratio
@@ -74,6 +75,34 @@ def PS_inv(img, r):
                 res[x // r][y // r][C * r * (y % r) + C * (x % r) + c] = img[x][y][c]
     return res
 
+def PSNR(original, compressed): 
+    mse = np.mean((original - compressed) ** 2) 
+    if(mse == 0):  # MSE is zero means no noise is present in the signal . 
+                  # Therefore PSNR have no importance. 
+        return 100
+    max_pixel = 255.0
+    psnr = 20 * log10(max_pixel / sqrt(mse)) 
+    return psnr 
+
+def average_PSNR(folder, net, r):
+    images = []
+    for filename in os.listdir(folder):
+        img = plt.imread(os.path.join(folder,filename))
+        if img is not None:
+            img = resize(img, ((img.shape[0] // r) * r, (img.shape[1] // r) * r))
+            images.append(img)
+            
+    sumPSNR = 0
+    for og_img in images:
+        img = resize(og_img, (og_img.shape[0] // 3, og_img.shape[1] // 3))
+        if (len(img.shape) == 2): # convert image to rgb if it is grayscale
+            img = np.stack((img, img, img), axis=2)
+            og_img = np.stack((og_img, og_img, og_img), axis=2)
+        img = np.transpose(img, (2, 0, 1))
+        img = torch.Tensor(img).unsqueeze(0).double()
+        result = net(img).detach().numpy()
+        sumPSNR += PSNR(PS(result[0], r) * 255, og_img * 255)
+    return sumPSNR / len(images)
 
 """
 Downsample images
@@ -251,15 +280,16 @@ while True:  # loop over the dataset multiple times
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))
 
-# TODO: check PSNR on Set5 en Set14
-# save model with name psnr score?
-torch.save(net.state_dict(), "trained_model")
+set5_PSNR = average_PSNR("datasets/testing/Set5", net, r)
+set14_PSNR = average_PSNR("datasets/testing/Set5", net, r)
+
+torch.save(net.state_dict(), "models/trained_model_%.5f_%.5f" % (set5_PSNR, set14_PSNR))
 
 print("Finished validation \n")
 
 print("dataset:               " + dataset)
-print("psnr Set5:             " + "X")
-print("psnr Set14:            " + "X")
+print("psnr Set5:             " + set5_PSNR)
+print("psnr Set14:            " + set14_PSNR)
 print("loss on training set:  " + str(epoch_loss))
 print("loss on test set:      " + "X")
 print("r:                     " + str(r))
