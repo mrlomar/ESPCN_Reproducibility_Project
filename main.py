@@ -1,3 +1,5 @@
+import datetime
+
 import matplotlib
 import torch
 import torch.nn as nn
@@ -20,7 +22,6 @@ from math import floor
 # hyperparameters
 r = 3  # upscaling ratio
 blur = 1  # gaussian blur (missing ???)
-C = 3  # colour channels
 lr_start = 0.01  # learning rate
 lr_end = 0.0001
 mu = 1e-3  # threshold for lowering the lr (missing ???)
@@ -28,7 +29,12 @@ no_learning_threshold = 1e-4  # threshold for stopping training of no improvemen
 minibatch_size = 100
 
 # parameters
+dataset = "T91"
 epoch_save_interval = 20
+use_gpu = torch.cuda.is_available()
+
+# Constants
+C = 3  # colour channels
 
 
 def imshow(img):
@@ -173,11 +179,12 @@ class Net(nn.Module):
 
 
 # Start loading data
-dataloader = torchDataloader_from_path('datasets/T91', r, blur)
+dataloader = torchDataloader_from_path('datasets/' + dataset, r, blur)
 print("Data loaded")
 
 # Start training
-use_gpu = torch.cuda.is_available()
+start_time = datetime.datetime.now()
+print("starting training at: " + str(start_time))
 
 net = Net()
 net.double()
@@ -249,8 +256,27 @@ while True:  # loop over the dataset multiple times
         torch.save(net.state_dict(), model_dest + str(epoch + 1))
     epoch += 1
 
-print('Finished Training')
+end_time = datetime.datetime.now()
+print('Finished training at: ' + str(end_time))
 
+# TODO: check PSNR on Set5 en Set14
+# save model with name psnr score?
 torch.save(net.state_dict(), "trained_model")
 
+print("Finished validation \n")
 
+print("dataset:               " + dataset)
+print("psnr Set5:             " + "X")
+print("psnr Set14:            " + "X")
+print("loss on training set:  " + str(epoch_loss))
+print("loss on test set:      " + "X")
+print("r:                     " + str(r))
+print("blur:                  " + str(blur))
+print("lr_start:              " + str(lr_start))
+print("lr_end:                " + str(lr_end))
+print("mu:                    " + str(mu))
+print("no_learning_threshold: " + str(no_learning_threshold))
+print("epochs:                " + str(epoch + 1))
+print("training duration:     " + str(end_time - start_time))
+print("minibatch_size:        " + str(minibatch_size))
+print("model saved as:        " + "X")
