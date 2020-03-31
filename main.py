@@ -293,9 +293,9 @@ torch.save(net.state_dict(), "models/trained_model_" + str(set14_PSNR))
 print("Finished validation \n")
 
 print("dataset:               " + dataset)
-print("loss on training set:  " + str(epoch_loss))  # TODO Olivier edit this
 print("psnr Set14:            " + str(set14_PSNR))
 print("psnr Set5:             " + str(set5_PSNR))
+print("loss on training set:  " + str(epoch_loss))  # TODO Olivier edit this
 print("loss on test set:      " + "X")  # TODO Olivier edit this
 print("r:                     " + str(r))
 print("blur:                  " + str(blur))
