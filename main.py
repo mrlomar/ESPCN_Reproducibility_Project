@@ -13,7 +13,7 @@ from math import floor, log10, sqrt
 
 # hyperparameters
 r = 3  # upscaling ratio
-blur = 1  # gaussian blur (missing ???)
+blur = 0.25  # gaussian blur (missing ???)
 lr_start = 0.01  # learning rate
 lr_end = 0.0001
 mu = 1e-3  # threshold for lowering the lr (missing ???)
@@ -232,9 +232,7 @@ last_epoch_loss_test = float("inf")
 last_epoch_loss_train = float("inf")
 ni_counter = 0  # counts the amount of epochs no where no improvement has been made
 
-from datetime import datetime
-
-now = datetime.now()
+now = datetime.datetime.now()
 dt_string = now.strftime("%Y-%m-%d_%H-%M-%S")
 models_folder = "models"
 model_name = "{}_espcnn_r{}".format(dt_string, r)
@@ -350,8 +348,8 @@ torch.save(net.state_dict(), "models/trained_model_" + str(set14_PSNR))
 print("Finished validation \n")
 
 print("dataset:               " + dataset)
-print("psnr Set14:            " + str(set14_PSNR))
 print("psnr Set5:             " + str(set5_PSNR))
+print("psnr Set14:            " + str(set14_PSNR))
 print("best epoch:            " + str(best_epoch))  # epoch with the lowest loss on the test dataset
 print("loss on training set:  " + str(best_epoch_train_loss))  # loss for the best epoch
 print("loss on test set:      " + str(best_test_loss))  # loss for the best epoch
