@@ -19,7 +19,7 @@ lr_end = 0.0001
 mu = 1e-3  # threshold for lowering the lr (missing ???)
 no_learning_threshold = 1e-4  # threshold for stopping training of no improvement has been made for 100 epochs
 minibatch_size = 100
-trainingsPart = 0.8  # The part which of the data set that will be used for the training, the remainder will be used for testing (0.8 = 80%)
+train_test_fraction = 0.8  # The part which of the data set that will be used for the training, the remainder will be used for testing (0.8 = 80%)
 
 # parameters
 dataset = "T91"
@@ -203,7 +203,7 @@ class Net(nn.Module):
 
 # Start loading data
 dataloader = torchDataloader_from_path('datasets/' + dataset, r, blur)
-train_size = int(trainingsPart * len(dataloader.dataset))
+train_size = int(train_test_fraction * len(dataloader.dataset))
 test_size = len(dataloader.dataset) - train_size
 train_set, test_set = torch.utils.data.random_split(dataloader.dataset, [train_size, test_size])
 train_dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
@@ -364,5 +364,5 @@ print("no_learning_threshold: " + str(no_learning_threshold))
 print("epochs:                " + str(epoch + 1))
 print("training duration:     " + str(end_time - start_time))
 print("minibatch_size:        " + str(minibatch_size))
-print("trainingsPart:         " + str(trainingsPart))
+print("train_test_fraction:   " + str(train_test_fraction))
 print("model saved as:        " + "models/trained_model_" + str(set14_PSNR))
