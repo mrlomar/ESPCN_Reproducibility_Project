@@ -182,7 +182,7 @@ def toDataloader(train_data, train_labels):
     labeled_data = []
     for i in range(len(train_data)):
         labeled_data.append([np.transpose(train_data[i], (2, 0, 1)), np.transpose(train_labels[i], (2, 0, 1))])
-    trainDataloader = DataLoader(labeled_data)
+    trainDataloader = DataLoader(labeled_data, batch_size=4, shuffle=True)
     return trainDataloader
 
 
@@ -205,8 +205,8 @@ dataloader = torchDataloader_from_path('datasets/' + dataset, r, blur)
 train_size = int(0.8 * len(dataloader.dataset))
 test_size = len(dataloader.dataset) - train_size
 train_set, test_set = torch.utils.data.random_split(dataloader.dataset, [train_size, test_size])
-train_dataloader = DataLoader(train_set)
-test_dataloader = DataLoader(test_set)
+train_dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
+test_dataloader = DataLoader(test_set, batch_size=4, shuffle=True)
 print("Data loaded")
 
 # Start training
