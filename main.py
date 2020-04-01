@@ -19,6 +19,7 @@ lr_end = 0.0001
 mu = 1e-3  # threshold for lowering the lr (missing ???)
 no_learning_threshold = 1e-4  # threshold for stopping training of no improvement has been made for 100 epochs
 minibatch_size = 100
+trainingsPart = 0.8  # The part which of the data set that will be used for the training, the remainder will be used for testing (0.8 = 80%)
 
 # parameters
 dataset = "T91"
@@ -104,7 +105,7 @@ def average_PSNR(folder, net, r):
         img = torch.Tensor(img).unsqueeze(0).double()
         result = net(img).detach().numpy()
         sumPSNR += PSNR(PS(result[0], r) * 255, og_img * 255)
-	
+
     return sumPSNR / len(images)
 
 
@@ -202,7 +203,7 @@ class Net(nn.Module):
 
 # Start loading data
 dataloader = torchDataloader_from_path('datasets/' + dataset, r, blur)
-train_size = int(0.8 * len(dataloader.dataset))
+train_size = int(trainingsPart * len(dataloader.dataset))
 test_size = len(dataloader.dataset) - train_size
 train_set, test_set = torch.utils.data.random_split(dataloader.dataset, [train_size, test_size])
 train_dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
@@ -232,6 +233,7 @@ last_epoch_loss_train = float("inf")
 ni_counter = 0  # counts the amount of epochs no where no improvement has been made
 
 from datetime import datetime
+
 now = datetime.now()
 dt_string = now.strftime("%Y-%m-%d_%H-%M-%S")
 models_folder = "models"
@@ -245,7 +247,7 @@ model_dest = models_folder + '/' + model_name + "/model_epoch_"
 best_model_dest = models_folder + '/' + model_name + "/best_model"
 lr = lr_start
 
-best_test_loss = 100000 #start with dummy value, keep track of best loss on test dataset
+best_test_loss = 100000  # start with dummy value, keep track of best loss on test dataset
 best_epoch = 0
 while True:  # loop over the dataset multiple times
     epoch_loss_train = 0.0
@@ -274,11 +276,10 @@ while True:  # loop over the dataset multiple times
             running_loss_train = 0.0
     epoch_loss_train = epoch_loss_train / len(inputs)
     print(epoch + 1, epoch_loss_train)
-    
-    
+
     epoch_loss_test = 0.0
     running_loss_test = 0.0
-    for i, data in enumerate(test_dataloader, 0): # get loss on test dataset
+    for i, data in enumerate(test_dataloader, 0):  # get loss on test dataset
         # get the inputs
         inputs, labels = data
         if use_gpu:
@@ -298,13 +299,14 @@ while True:  # loop over the dataset multiple times
             running_loss_test = 0.0
     epoch_loss_test = epoch_loss_test / len(inputs)
     print(epoch + 1, epoch_loss_test)
-    
-    if epoch_loss_test < best_test_loss: #save best model, 'best' meaning lowest loss on test set
+
+    if epoch_loss_test < best_test_loss:  # save best model, 'best' meaning lowest loss on test set
         best_test_loss = epoch_loss_test
-        torch.save(net.state_dict(), best_model_dest) #overwrite best model so the best model filename doesn't change
-        torch.save(net.state_dict(), best_model_dest + '_epoch_' + str(epoch + 1)) #also save with epoch number to keep history of best models
+        torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
+        torch.save(net.state_dict(), best_model_dest + '_epoch_' + str(
+            epoch + 1))  # also save with epoch number to keep history of best models
         best_epoch = epoch
-        best_epoch_train_loss = epoch_loss_train 
+        best_epoch_train_loss = epoch_loss_train
 
     improvement = abs(last_epoch_loss_test - epoch_loss_test)  # check for improvement with test set
     print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
@@ -324,7 +326,7 @@ while True:  # loop over the dataset multiple times
             param_group['lr'] = lr
 
     losses_train.append(epoch_loss_train / len(inputs))
-    losses_test.append(epoch_loss_test / len(inputs))    
+    losses_test.append(epoch_loss_test / len(inputs))
     last_epoch_loss_train = epoch_loss_train
     last_epoch_loss_test = epoch_loss_test
 
@@ -350,7 +352,7 @@ print("Finished validation \n")
 print("dataset:               " + dataset)
 print("psnr Set14:            " + str(set14_PSNR))
 print("psnr Set5:             " + str(set5_PSNR))
-print("best epoch:            " + str(best_epoch)) # epoch with the lowest loss on the test dataset
+print("best epoch:            " + str(best_epoch))  # epoch with the lowest loss on the test dataset
 print("loss on training set:  " + str(best_epoch_train_loss))  # loss for the best epoch
 print("loss on test set:      " + str(best_test_loss))  # loss for the best epoch
 print("r:                     " + str(r))
@@ -362,4 +364,5 @@ print("no_learning_threshold: " + str(no_learning_threshold))
 print("epochs:                " + str(epoch + 1))
 print("training duration:     " + str(end_time - start_time))
 print("minibatch_size:        " + str(minibatch_size))
+print("trainingsPart:         " + str(trainingsPart))
 print("model saved as:        " + "models/trained_model_" + str(set14_PSNR))
