@@ -112,10 +112,8 @@ def average_PSNR(folder, net, r):
 Downsample images
 - gaussian blur
 - resize by downsample factor (using interpolation)
-
 How To Use:
     function lr_dataset_from_path takes a path to the dataset of HR image png files and returns an ndarray to use for training the model
-
 For debugging/showing examples:
     (see bottom of file)
     save_png set to True to save resulting lr images in specified directory.
@@ -152,7 +150,6 @@ def torchDataloader_from_path(hr_dataset_path, downscale, gaussian_sigma):
         for sample_indx in range(len(temp_subsamples)):
             subsamples_hr_rev_shuff.append(PS_inv(temp_subsamples[sample_indx], downscale))  # labels
     lr_dataset = lr_images(subsamples_hr, downscale, gaussian_sigma)  # ndarray of images
-
     return toDataloader(lr_dataset, subsamples_hr_rev_shuff)
 
 
@@ -205,6 +202,11 @@ class Net(nn.Module):
 
 # Start loading data
 dataloader = torchDataloader_from_path('datasets/' + dataset, r, blur)
+train_size = int(0.8 * len(dataloader.dataset))
+test_size = len(dataloader.dataset) - train_size
+train_set, test_set = torch.utils.data.random_split(dataloader.dataset, [train_size, test_size])
+train_dataloader = DataLoader(train_set)
+test_dataloader = DataLoader(test_set)
 print("Data loaded")
 
 # Start training
@@ -221,18 +223,34 @@ if use_gpu:
 criterion = nn.MSELoss()
 optimizer = optim.SGD(net.parameters(), lr=lr_start, momentum=0)  # momentum???
 
-losses = []
+losses_train = []
+losses_test = []
 
 epoch = 0
-last_epoch_loss = float("inf")
+last_epoch_loss_test = float("inf")
+last_epoch_loss_train = float("inf")
 ni_counter = 0  # counts the amount of epochs no where no improvement has been made
-model_dest = "models/model_epoch_"
+
+from datetime import datetime
+now = datetime.now()
+dt_string = now.strftime("%Y-%m-%d_%H-%M-%S")
+models_folder = "models"
+model_name = "{}_espcnn_r{}".format(dt_string, r)
+
+try:
+    os.mkdir(models_folder + '/' + model_name)
+except:
+    print("Folder {} already exists, overwritting model data".format(models_folder + '/' + model_name))
+model_dest = models_folder + '/' + model_name + "/model_epoch_"
+best_model_dest = models_folder + '/' + model_name + "/best_model"
 lr = lr_start
 
+best_test_loss = 100000 #start with dummy value, keep track of best loss on test dataset
+best_epoch = 0
 while True:  # loop over the dataset multiple times
-    epoch_loss = 0.0
-    running_loss = 0.0
-    for i, data in enumerate(dataloader, 0):
+    epoch_loss_train = 0.0
+    running_loss_train = 0.0
+    for i, data in enumerate(train_dataloader, 0):
         # get the inputs
         inputs, labels = data
         if use_gpu:
@@ -248,16 +266,47 @@ while True:  # loop over the dataset multiple times
         optimizer.step()
 
         # print statistics
-        epoch_loss += outputs.shape[0] * loss.item()
-        running_loss += loss.item()
+        epoch_loss_train += outputs.shape[0] * loss.item()
+        running_loss_train += loss.item()
         if i % minibatch_size == minibatch_size - 1:  # print every 2000 mini-batches
-            print('[%d, %5d] loss: %.5f' %
-                  (epoch + 1, i + 1, running_loss / minibatch_size))
-            running_loss = 0.0
-    epoch_loss = epoch_loss / len(inputs)
-    print(epoch + 1, epoch_loss)
+            print('[%d, %5d] train_loss: %.5f' %
+                  (epoch + 1, i + 1, running_loss_train / minibatch_size))
+            running_loss_train = 0.0
+    epoch_loss_train = epoch_loss_train / len(inputs)
+    print(epoch + 1, epoch_loss_train)
+    
+    
+    epoch_loss_test = 0.0
+    running_loss_test = 0.0
+    for i, data in enumerate(test_dataloader, 0): # get loss on test dataset
+        # get the inputs
+        inputs, labels = data
+        if use_gpu:
+            inputs = inputs.cuda()
+            labels = labels.cuda()
 
-    improvement = abs(last_epoch_loss - epoch_loss)  # TODO Olivier use test set
+        # forward + backward + optimize
+        outputs = net(inputs.double())
+        loss = criterion(outputs, labels)
+
+        # print statistics
+        epoch_loss_test += outputs.shape[0] * loss.item()
+        running_loss_test += loss.item()
+        if i % minibatch_size == minibatch_size - 1:  # print every 2000 mini-batches
+            print('[%d, %5d] test_loss: %.5f' %
+                  (epoch + 1, i + 1, running_loss_test / minibatch_size))
+            running_loss_test = 0.0
+    epoch_loss_test = epoch_loss_test / len(inputs)
+    print(epoch + 1, epoch_loss_test)
+    
+    if epoch_loss_test < best_test_loss: #save best model, 'best' meaning lowest loss on test set
+        best_test_loss = epoch_loss_test
+        torch.save(net.state_dict(), best_model_dest) #overwrite best model so the best model filename doesn't change
+        torch.save(net.state_dict(), best_model_dest + '_epoch_' + str(epoch + 1)) #also save with epoch number to keep history of best models
+        best_epoch = epoch
+        best_epoch_train_loss = epoch_loss_train 
+
+    improvement = abs(last_epoch_loss_test - epoch_loss_test)  # check for improvement with test set
     print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
     if improvement < no_learning_threshold:
         ni_counter += 1
@@ -274,8 +323,10 @@ while True:  # loop over the dataset multiple times
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
-    losses.append(epoch_loss / len(inputs))
-    last_epoch_loss = epoch_loss
+    losses_train.append(epoch_loss_train / len(inputs))
+    losses_test.append(epoch_loss_test / len(inputs))    
+    last_epoch_loss_train = epoch_loss_train
+    last_epoch_loss_test = epoch_loss_test
 
     if epoch % epoch_save_interval == 0:
         torch.save(net.state_dict(), model_dest + str(epoch + 1))
@@ -283,6 +334,10 @@ while True:  # loop over the dataset multiple times
 
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))
+
+print('Saving train and test loss')
+np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
+np.save(models_folder + '/' + model_name + '/loss_test', losses_test)
 
 net.cpu()
 set5_PSNR = average_PSNR("datasets/testing/Set5", net, r)
@@ -295,8 +350,9 @@ print("Finished validation \n")
 print("dataset:               " + dataset)
 print("psnr Set14:            " + str(set14_PSNR))
 print("psnr Set5:             " + str(set5_PSNR))
-print("loss on training set:  " + str(epoch_loss))  # TODO Olivier edit this
-print("loss on test set:      " + "X")  # TODO Olivier edit this
+print("best epoch:            " + str(best_epoch)) # epoch with the lowest loss on the test dataset
+print("loss on training set:  " + str(best_epoch_train_loss))  # loss for the best epoch
+print("loss on test set:      " + str(best_test_loss))  # loss for the best epoch
 print("r:                     " + str(r))
 print("blur:                  " + str(blur))
 print("lr_start:              " + str(lr_start))
