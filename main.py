@@ -18,12 +18,13 @@ lr_start = 0.01  # learning rate
 lr_end = 0.0001
 mu = 1e-3  # threshold for lowering the lr (missing ???)
 no_learning_threshold = 1e-4  # threshold for stopping training of no improvement has been made for 100 epochs
-minibatch_size = 100
+batch_size = 1
 train_test_fraction = 0.8  # The part which of the data set that will be used for the training, the remainder will be used for testing (0.8 = 80%)
 
 # parameters
 dataset = "T91"
 epoch_save_interval = 20
+minibatch_size = 100
 use_gpu = torch.cuda.is_available()
 
 # Constants
@@ -183,7 +184,7 @@ def toDataloader(train_data, train_labels):
     labeled_data = []
     for i in range(len(train_data)):
         labeled_data.append([np.transpose(train_data[i], (2, 0, 1)), np.transpose(train_labels[i], (2, 0, 1))])
-    trainDataloader = DataLoader(labeled_data, batch_size=4, shuffle=True)
+    trainDataloader = DataLoader(labeled_data, batch_size=batch_size, shuffle=True)
     return trainDataloader
 
 
@@ -206,8 +207,8 @@ dataloader = torchDataloader_from_path('datasets/' + dataset, r, blur)
 train_size = int(train_test_fraction * len(dataloader.dataset))
 test_size = len(dataloader.dataset) - train_size
 train_set, test_set = torch.utils.data.random_split(dataloader.dataset, [train_size, test_size])
-train_dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
-test_dataloader = DataLoader(test_set, batch_size=4, shuffle=True)
+train_dataloader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
 print("Data loaded")
 
 # Start training
@@ -361,6 +362,6 @@ print("mu:                    " + str(mu))
 print("no_learning_threshold: " + str(no_learning_threshold))
 print("epochs:                " + str(epoch + 1))
 print("training duration:     " + str(end_time - start_time))
-print("minibatch_size:        " + str(minibatch_size))
+print("batch_size:            " + str(batch_size))
 print("train_test_fraction:   " + str(train_test_fraction))
-print("model saved as:        " + "models/trained_model_" + str(set14_PSNR))
+print("model saved as:        " + "trained_model_" + str(set14_PSNR))
