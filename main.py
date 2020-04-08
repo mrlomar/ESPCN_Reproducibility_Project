@@ -175,8 +175,8 @@ np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
 np.save(models_folder + '/' + model_name + '/loss_test', losses_test)
 
 net.cpu()
-set5_PSNR = average_PSNR("./datasets/testing/Set5", net, r)
-set14_PSNR = average_PSNR("./datasets/testing/Set14", net, r)
+set5_PSNR = average_PSNR("./datasets/testing/Set5", net, r, blur)
+set14_PSNR = average_PSNR("./datasets/testing/Set14", net, r, blur)
 
 torch.save(net.state_dict(), "models/trained_model_" + str(set14_PSNR))
 
