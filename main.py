@@ -202,7 +202,7 @@ print("model:                 " + model_name)
 with open(models_folder + '/' + model_name + 'results.csv', mode='w') as csv_file:
 	fieldnames = ['dataset', 'psnr_Set5', 'psnr_Set14', 'best_epoch', 'training_loss', 'test_loss', 'r', 'blur', 'lr_start', 'lr_end', 'mu', 'no_learning_threshold', 'epochs', 'training_duration', 'batch_size', 'train_test_fraction', 'model']
 	writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-	write.writeheader()
+	writer.writeheader()
 	writer.writerow({
 		'data_set': dataset,
 		'psnr_Set5': set5_PSNR,
