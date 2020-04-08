@@ -12,6 +12,7 @@ import math
 from src.dataloader import torchDataloader_from_path
 from src.metrics import *
 from src.espcn import *
+import csv
 
 # hyperparameters
 r = 3  # upscaling ratio
@@ -131,13 +132,14 @@ while True:  # loop over the dataset multiple times
     epoch_loss_test = epoch_loss_test / len(test_dataloader.dataset)
     print(epoch + 1, epoch_loss_test)
 
+    improvement = best_test_loss - epoch_loss_test
+
     if epoch_loss_test < best_test_loss:  # save best model, 'best' meaning lowest loss on test set
         best_test_loss = epoch_loss_test
         torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
         best_epoch = epoch
         best_epoch_train_loss = epoch_loss_train
 
-    improvement = best_test_loss - epoch_loss_test  # check for improvement with test set
     print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
     if improvement < no_learning_threshold:
         ni_counter += 1
@@ -196,3 +198,26 @@ print("training duration:     " + str(end_time - start_time))
 print("batch_size:            " + str(batch_size))
 print("train_test_fraction:   " + str(train_test_fraction))
 print("model:                 " + model_name)
+
+with open(models_folder + '/' + model_name + 'results.csv', mode='w') as csv_file:
+	fieldnames = ['dataset', 'psnr_Set5', 'psnr_Set14', 'best_epoch', 'training_loss', 'test_loss', 'r', 'blur', 'lr_start', 'lr_end', 'mu', 'no_learning_threshold', 'epochs', 'training_duration', 'batch_size', 'train_test_fraction', 'model']
+	writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+	write.writeheader()
+	writer.writerow({
+		'data_set': dataset,
+		'psnr_Set5': set5_PSNR,
+		'psnr_Set14': set14_PSNR,
+		'best_epoch': best_epoch,
+		'training_loss': best_epoch_train_loss,
+		'test_loss': best_test_loss,
+		'r': r,
+		'blur': blur,
+		'lr_start': lr_start,
+		'lr_end': lr_end,
+		'mu': mu,
+		'no_learning_threshold': no_learning_threshold,
+		'epochs': (epoch + 1),
+		'training_duration': (end_time - start_time),
+		'batch_size': batch_size,
+		'train_test_fraction': train_test_fraction,
+		'model': model_name})
