@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from math import log10, sqrt
 import torch
 from skimage.transform import *
+from skimage.filters import *
 
 from src.espcn import PS
 
@@ -18,7 +19,7 @@ def PSNR(original, compressed):
     return psnr
 
 
-def average_PSNR(folder, net, r):
+def average_PSNR(folder, net, r, gaussianSigma):
     images = []
     for filename in os.listdir(folder):
         img = plt.imread(os.path.join(folder, filename))
@@ -28,7 +29,9 @@ def average_PSNR(folder, net, r):
 
     sumPSNR = 0
     for og_img in images:
-        img = resize(og_img, (og_img.shape[0] // 3, og_img.shape[1] // 3))
+        img_blurred = gaussian(og_img, sigma=gaussianSigma,
+                               multichannel=True)  # multichannel blurr so that 3rd channel is not blurred
+        img = resize(img_blurred, (img_blurred.shape[0] // r, img_blurred.shape[1] // r))
         if (len(img.shape) == 2):  # convert image to rgb if it is grayscale
             img = np.stack((img, img, img), axis=2)
             og_img = np.stack((og_img, og_img, og_img), axis=2)
