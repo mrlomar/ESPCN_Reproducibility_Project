@@ -25,7 +25,7 @@ train_test_fraction = 0.8  # The part which of the data set that will be used fo
 
 # parameters
 dataset = "T91"
-epoch_save_interval = 20
+epoch_save_interval = 100
 minibatch_size = 100
 use_gpu = torch.cuda.is_available()
 
@@ -105,7 +105,7 @@ while True:  # loop over the dataset multiple times
             print('[%d, %5d] train_loss: %.5f' %
                   (epoch + 1, i + 1, running_loss_train / minibatch_size))
             running_loss_train = 0.0
-    epoch_loss_train = epoch_loss_train / len(inputs)
+    epoch_loss_train = epoch_loss_train / len(train_dataloader.dataset)
     print(epoch + 1, epoch_loss_train)
 
     epoch_loss_test = 0.0
@@ -128,17 +128,16 @@ while True:  # loop over the dataset multiple times
             print('[%d, %5d] test_loss: %.5f' %
                   (epoch + 1, i + 1, running_loss_test / minibatch_size))
             running_loss_test = 0.0
-    epoch_loss_test = epoch_loss_test / len(inputs)
+    epoch_loss_test = epoch_loss_test / len(test_dataloader.dataset)
     print(epoch + 1, epoch_loss_test)
 
     if epoch_loss_test < best_test_loss:  # save best model, 'best' meaning lowest loss on test set
         best_test_loss = epoch_loss_test
-        #torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
-        #torch.save(net.state_dict(), best_model_dest + '_epoch_' + str(epoch + 1))  # also save with epoch number to keep history of best models
+        torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
         best_epoch = epoch
         best_epoch_train_loss = epoch_loss_train
 
-    improvement = abs(last_epoch_loss_test - epoch_loss_test)  # check for improvement with test set
+    improvement = best_test_loss - epoch_loss_test  # check for improvement with test set
     print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
     if improvement < no_learning_threshold:
         ni_counter += 1
@@ -155,8 +154,8 @@ while True:  # loop over the dataset multiple times
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
 
-    losses_train.append(epoch_loss_train / len(inputs))
-    losses_test.append(epoch_loss_test / len(inputs))
+    losses_train.append(epoch_loss_train)
+    losses_test.append(epoch_loss_test)
     last_epoch_loss_train = epoch_loss_train
     last_epoch_loss_test = epoch_loss_test
 
@@ -167,18 +166,16 @@ while True:  # loop over the dataset multiple times
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))
 
-print("Saving best model")
-torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
-
 print('Saving train and test loss')
 np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
 np.save(models_folder + '/' + model_name + '/loss_test', losses_test)
 
+net.load_state_dict(torch.load(best_model_dest))
+net.eval()
+
 net.cpu()
 set5_PSNR = average_PSNR("./datasets/testing/Set5", net, r, blur)
 set14_PSNR = average_PSNR("./datasets/testing/Set14", net, r, blur)
-
-torch.save(net.state_dict(), "models/trained_model_" + str(set14_PSNR))
 
 print("Finished validation \n")
 
@@ -198,4 +195,4 @@ print("epochs:                " + str(epoch + 1))
 print("training duration:     " + str(end_time - start_time))
 print("batch_size:            " + str(batch_size))
 print("train_test_fraction:   " + str(train_test_fraction))
-print("model saved as:        " + "trained_model_" + str(set14_PSNR))
+print("model:                 " + model_name)
