@@ -133,9 +133,8 @@ while True:  # loop over the dataset multiple times
 
     if epoch_loss_test < best_test_loss:  # save best model, 'best' meaning lowest loss on test set
         best_test_loss = epoch_loss_test
-        torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
-        torch.save(net.state_dict(), best_model_dest + '_epoch_' + str(
-            epoch + 1))  # also save with epoch number to keep history of best models
+        #torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
+        #torch.save(net.state_dict(), best_model_dest + '_epoch_' + str(epoch + 1))  # also save with epoch number to keep history of best models
         best_epoch = epoch
         best_epoch_train_loss = epoch_loss_train
 
@@ -167,6 +166,9 @@ while True:  # loop over the dataset multiple times
 
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))
+
+print("Saving best model")
+torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
 
 print('Saving train and test loss')
 np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
