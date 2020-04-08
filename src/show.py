@@ -59,4 +59,13 @@ plt.show()
 png = Image.fromarray((result * 255).round().astype(np.uint8))
 png.save("SR.png")
 
+train_losses = np.load("../models/trained_model_26.840612107311582/loss_train")
+test_losses = np.load("../models/trained_model_26.840612107311582/loss_test")
+
+plt.plot(train_losses)
+plt.plot(test_losses)
+plt.yscale("log")
+
+plt.show()
+
 print(PSNR(result * 255, first_img * 255))
