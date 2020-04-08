@@ -204,7 +204,7 @@ with open(models_folder + '/' + model_name + 'results.csv', mode='w') as csv_fil
 	writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 	writer.writeheader()
 	writer.writerow({
-		'data_set': dataset,
+		'dataset': dataset,
 		'psnr_Set5': set5_PSNR,
 		'psnr_Set14': set14_PSNR,
 		'best_epoch': best_epoch,
