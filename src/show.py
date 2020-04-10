@@ -4,7 +4,6 @@ from PIL import Image
 
 from src.espcn import *
 from math import log10, sqrt
-import cv2
 import numpy as np
 from skimage.transform import *
 from src.metrics import PSNR
@@ -30,7 +29,7 @@ def imshow(img):
 
 net = Net(r, C)
 net.double()
-net.load_state_dict(torch.load("../models/" + model_folder + "/trained_model"))
+net.load_state_dict(torch.load("../models/" + model_folder + "/best_model"))
 net.eval()
 
 first_img = plt.imread("../datasets/testing/Set14/baboon.png")
@@ -63,6 +62,8 @@ plt.show()
 png = Image.fromarray((result * 255).round().astype(np.uint8))
 png.save("SR.png")
 
+print("PSNR:" + str(PSNR(result * 255, first_img * 255)))
+
 train_losses = np.load("../models/" + model_folder + "/loss_train.npy")
 test_losses = np.load("../models/" + model_folder + "/loss_test.npy")
 
@@ -71,4 +72,4 @@ plt.plot(test_losses)
 plt.yscale("log")
 plt.show()
 
-print("PSNR:" + str(PSNR(result * 255, first_img * 255)))
+

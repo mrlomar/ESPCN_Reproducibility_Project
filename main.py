@@ -19,8 +19,8 @@ r = 3  # upscaling ratio
 blur = 0.1  # gaussian blur (missing ???)
 lr_start = 0.01  # learning rate
 lr_end = 0.0001
-mu = 1e-3  # threshold for lowering the lr (missing ???)
-no_learning_threshold = 1e-4  # threshold for stopping training of no improvement has been made for 100 epochs
+mu = 1e-5  # threshold for lowering the lr (missing ???)
+no_learning_threshold = 1e-7  # threshold for stopping training of no improvement has been made for 100 epochs
 batch_size = 1
 train_test_fraction = 0.8  # The part which of the data set that will be used for the training, the remainder will be used for testing (0.8 = 80%)
 
@@ -169,12 +169,12 @@ except KeyboardInterrupt:
     print("Press Ctrl-C to terminate while statement")
     pass
 
+    print('Saving train and test loss')
+    np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
+    np.save(models_folder + '/' + model_name + '/loss_test', losses_test)
+
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))
-
-print('Saving train and test loss')
-np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
-np.save(models_folder + '/' + model_name + '/loss_test', losses_test)
 
 net.load_state_dict(torch.load(best_model_dest))
 net.eval()
