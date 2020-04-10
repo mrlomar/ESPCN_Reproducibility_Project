@@ -9,8 +9,11 @@ from skimage.transform import *
 from src.metrics import PSNR
 import sys
 
+from skimage.filters import *
+
 # hyperparameters
 r = 3  # upscaling ratio
+gaussianSigma = 0.1 #gaussian sigma used when downscaling
 
 # Constants
 C = 3  # colour channels
@@ -41,7 +44,8 @@ png.save("HR.png")
 plt.imshow(first_img)
 plt.show()
 
-img = resize(first_img, (first_img.shape[0] // r, first_img.shape[1] // r))
+img_blurred = gaussian(first_img, sigma=gaussianSigma, multichannel=True)  # multichannel blurr so that 3rd channel is not blurred
+img = resize(img_blurred, (img_blurred.shape[0] // r, img_blurred.shape[1] // r)
 
 png = Image.fromarray((img * 255).round().astype(np.uint8))
 png.save("LR.png")
