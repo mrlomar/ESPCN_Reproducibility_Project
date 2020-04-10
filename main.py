@@ -81,89 +81,93 @@ lr = lr_start
 
 best_test_loss = 100000  # start with dummy value, keep track of best loss on test dataset
 best_epoch = 0
-while True:  # loop over the dataset multiple times
-    epoch_loss_train = 0.0
-    running_loss_train = 0.0
-    for i, data in enumerate(train_dataloader, 0):
-        # get the inputs
-        inputs, labels = data
-        if use_gpu:
-            inputs = inputs.cuda()
-            labels = labels.cuda()
-        # zero the parameter gradients
-        optimizer.zero_grad()
+try:
+	while True:  # loop over the dataset multiple times
+	    epoch_loss_train = 0.0
+	    running_loss_train = 0.0
+	    for i, data in enumerate(train_dataloader, 0):
+		# get the inputs
+		inputs, labels = data
+		if use_gpu:
+		    inputs = inputs.cuda()
+		    labels = labels.cuda()
+		# zero the parameter gradients
+		optimizer.zero_grad()
 
-        # forward + backward + optimize
-        outputs = net(inputs.double())
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+		# forward + backward + optimize
+		outputs = net(inputs.double())
+		loss = criterion(outputs, labels)
+		loss.backward()
+		optimizer.step()
 
-        # print statistics
-        epoch_loss_train += outputs.shape[0] * loss.item()
-        running_loss_train += loss.item()
-        if i % minibatch_size == minibatch_size - 1:  # print every 2000 mini-batches
-            print('[%d, %5d] train_loss: %.5f' %
-                  (epoch + 1, i + 1, running_loss_train / minibatch_size))
-            running_loss_train = 0.0
-    epoch_loss_train = epoch_loss_train / len(train_dataloader.dataset)
-    print(epoch + 1, epoch_loss_train)
+		# print statistics
+		epoch_loss_train += outputs.shape[0] * loss.item()
+		running_loss_train += loss.item()
+		if i % minibatch_size == minibatch_size - 1:  # print every 2000 mini-batches
+		    print('[%d, %5d] train_loss: %.5f' %
+			  (epoch + 1, i + 1, running_loss_train / minibatch_size))
+		    running_loss_train = 0.0
+	    epoch_loss_train = epoch_loss_train / len(train_dataloader.dataset)
+	    print(epoch + 1, epoch_loss_train)
 
-    epoch_loss_test = 0.0
-    running_loss_test = 0.0
-    for i, data in enumerate(test_dataloader, 0):  # get loss on test dataset
-        # get the inputs
-        inputs, labels = data
-        if use_gpu:
-            inputs = inputs.cuda()
-            labels = labels.cuda()
+	    epoch_loss_test = 0.0
+	    running_loss_test = 0.0
+	    for i, data in enumerate(test_dataloader, 0):  # get loss on test dataset
+		# get the inputs
+		inputs, labels = data
+		if use_gpu:
+		    inputs = inputs.cuda()
+		    labels = labels.cuda()
 
-        # forward + backward + optimize
-        outputs = net(inputs.double())
-        loss = criterion(outputs, labels)
+		# forward + backward + optimize
+		outputs = net(inputs.double())
+		loss = criterion(outputs, labels)
 
-        # print statistics
-        epoch_loss_test += outputs.shape[0] * loss.item()
-        running_loss_test += loss.item()
-        if i % minibatch_size == minibatch_size - 1:  # print every 2000 mini-batches
-            print('[%d, %5d] test_loss: %.5f' %
-                  (epoch + 1, i + 1, running_loss_test / minibatch_size))
-            running_loss_test = 0.0
-    epoch_loss_test = epoch_loss_test / len(test_dataloader.dataset)
-    print(epoch + 1, epoch_loss_test)
+		# print statistics
+		epoch_loss_test += outputs.shape[0] * loss.item()
+		running_loss_test += loss.item()
+		if i % minibatch_size == minibatch_size - 1:  # print every 2000 mini-batches
+		    print('[%d, %5d] test_loss: %.5f' %
+			  (epoch + 1, i + 1, running_loss_test / minibatch_size))
+		    running_loss_test = 0.0
+	    epoch_loss_test = epoch_loss_test / len(test_dataloader.dataset)
+	    print(epoch + 1, epoch_loss_test)
 
-    improvement = best_test_loss - epoch_loss_test
+	    improvement = best_test_loss - epoch_loss_test
 
-    if epoch_loss_test < best_test_loss:  # save best model, 'best' meaning lowest loss on test set
-        best_test_loss = epoch_loss_test
-        torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
-        best_epoch = epoch
-        best_epoch_train_loss = epoch_loss_train
+	    if epoch_loss_test < best_test_loss:  # save best model, 'best' meaning lowest loss on test set
+		best_test_loss = epoch_loss_test
+		torch.save(net.state_dict(), best_model_dest)  # overwrite best model so the best model filename doesn't change
+		best_epoch = epoch
+		best_epoch_train_loss = epoch_loss_train
 
-    print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
-    if improvement < no_learning_threshold:
-        ni_counter += 1
-    else:
-        ni_counter = 0
+	    print("epoch " + str(epoch + 1) + ": improvement = " + str(improvement))
+	    if improvement < no_learning_threshold:
+		ni_counter += 1
+	    else:
+		ni_counter = 0
 
-    if ni_counter >= repeats:  # stop training if no improvement has been made for 100 epochs
-        break
+	    if ni_counter >= repeats:  # stop training if no improvement has been made for 100 epochs
+		break
 
-    # If  the improvement is too small, make the learning rate smaller
-    if improvement < mu and lr > lr_end:
-        lr = lr / 10
-        print("Learning rate decreased to:", lr)
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
+	    # If  the improvement is too small, make the learning rate smaller
+	    if improvement < mu and lr > lr_end:
+		lr = lr / 10
+		print("Learning rate decreased to:", lr)
+		for param_group in optimizer.param_groups:
+		    param_group['lr'] = lr
 
-    losses_train.append(epoch_loss_train)
-    losses_test.append(epoch_loss_test)
-    last_epoch_loss_train = epoch_loss_train
-    last_epoch_loss_test = epoch_loss_test
+	    losses_train.append(epoch_loss_train)
+	    losses_test.append(epoch_loss_test)
+	    last_epoch_loss_train = epoch_loss_train
+	    last_epoch_loss_test = epoch_loss_test
 
-    if epoch % epoch_save_interval == 0:
-        torch.save(net.state_dict(), model_dest + str(epoch + 1))
-    epoch += 1
+	    if epoch % epoch_save_interval == 0:
+		torch.save(net.state_dict(), model_dest + str(epoch + 1))
+	    epoch += 1
+except KeyboardInterrupt:
+    print("Press Ctrl-C to terminate while statement")
+    pass
 
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))
