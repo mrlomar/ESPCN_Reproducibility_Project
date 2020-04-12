@@ -4,6 +4,7 @@ from PIL import Image
 
 from src.espcn import *
 from math import log10, sqrt
+import cv2
 import numpy as np
 from skimage.transform import *
 from src.metrics import PSNR
@@ -45,7 +46,7 @@ plt.imshow(first_img)
 plt.show()
 
 img_blurred = gaussian(first_img, sigma=gaussianSigma, multichannel=True)  # multichannel blurr so that 3rd channel is not blurred
-img = resize(img_blurred, (img_blurred.shape[0] // r, img_blurred.shape[1] // r)
+img = resize(img_blurred, (img_blurred.shape[0] // r, img_blurred.shape[1] // r))
 
 png = Image.fromarray((img * 255).round().astype(np.uint8))
 png.save("LR.png")
