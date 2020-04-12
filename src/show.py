@@ -10,8 +10,11 @@ from skimage.transform import *
 from src.metrics import PSNR
 import sys
 
+from skimage.filters import *
+
 # hyperparameters
 r = 3  # upscaling ratio
+gaussianSigma = 0.1 #gaussian sigma used when downscaling
 
 # Constants
 C = 3  # colour channels
@@ -30,7 +33,7 @@ def imshow(img):
 
 net = Net(r, C)
 net.double()
-net.load_state_dict(torch.load("../models/" + model_folder + "/trained_model"))
+net.load_state_dict(torch.load("../models/" + model_folder + "/best_model"))
 net.eval()
 
 first_img = plt.imread("../datasets/testing/Set14/baboon.png")
@@ -42,7 +45,8 @@ png.save("HR.png")
 plt.imshow(first_img)
 plt.show()
 
-img = resize(first_img, (first_img.shape[0] // r, first_img.shape[1] // r))
+img_blurred = gaussian(first_img, sigma=gaussianSigma, multichannel=True)  # multichannel blurr so that 3rd channel is not blurred
+img = resize(img_blurred, (img_blurred.shape[0] // r, img_blurred.shape[1] // r))
 
 png = Image.fromarray((img * 255).round().astype(np.uint8))
 png.save("LR.png")
@@ -63,6 +67,8 @@ plt.show()
 png = Image.fromarray((result * 255).round().astype(np.uint8))
 png.save("SR.png")
 
+print("PSNR:" + str(PSNR(result * 255, first_img * 255)))
+
 train_losses = np.load("../models/" + model_folder + "/loss_train.npy")
 test_losses = np.load("../models/" + model_folder + "/loss_test.npy")
 
@@ -71,4 +77,4 @@ plt.plot(test_losses)
 plt.yscale("log")
 plt.show()
 
-print("PSNR:" + str(PSNR(result * 255, first_img * 255)))
+
