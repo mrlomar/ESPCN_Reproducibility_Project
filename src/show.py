@@ -7,13 +7,12 @@ from math import log10, sqrt
 import cv2
 import numpy as np
 from skimage.transform import *
-from src.metrics import PSNR
+from src.metrics import PSNR, average_PSNR
 import sys
+import csv
 
 from skimage.filters import *
 
-# hyperparameters
-r = 3  # upscaling ratio
 gaussianSigma = 0.1  # gaussian sigma used when downscaling
 
 # Constants
@@ -25,7 +24,12 @@ if len(sys.argv) < 2:
     raise Exception('No model_folder was given as system argument! Please use "python show.py model_folder"')
 
 model_folder = sys.argv[1]
-
+with open("../models/" + model_folder + "/results.csv") as csvfile:
+    reader = csv.reader(csvfile)
+    rows = list(reader)
+    headers = rows[0]
+    r = eval(rows[2][headers.index("r")])
+    blur = eval(rows[2][headers.index("blur")])
 
 def imshow(img):
     npimg = img.numpy()
@@ -79,3 +83,12 @@ plt.plot(test_losses[100:-1], label="test losses")
 plt.yscale("log")
 plt.legend()
 plt.show()
+
+set5_PSNR = average_PSNR("../datasets/testing/Set5", net, r, blur)
+print("PSNR Set5:   ", set5_PSNR)
+set14_PSNR = average_PSNR("../datasets/testing/Set14", net, r, blur)
+print("PSNR Set14:  ", set14_PSNR)
+BSD300_PSNR = average_PSNR("../datasets/testing/BSD300", net, r, blur)
+print("PSNR BSD300: ", BSD300_PSNR)
+BSD500_PSNR = average_PSNR("../datasets/testing/BSD500", net, r, blur)
+print("PSNR BSD500: ", BSD500_PSNR)
