@@ -14,7 +14,7 @@ from skimage.filters import *
 
 # hyperparameters
 r = 3  # upscaling ratio
-gaussianSigma = 0.1 #gaussian sigma used when downscaling
+gaussianSigma = 0.1  # gaussian sigma used when downscaling
 
 # Constants
 C = 3  # colour channels
@@ -22,14 +22,16 @@ use_gpu = torch.cuda.is_available()
 
 # Retrieve model folder
 if len(sys.argv) < 2:
-	raise Exception('No model_folder was given as system argument! Please use "python show.py model_folder"')
+    raise Exception('No model_folder was given as system argument! Please use "python show.py model_folder"')
 
 model_folder = sys.argv[1]
+
 
 def imshow(img):
     npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.show()
+
 
 net = Net(r, C)
 net.double()
@@ -45,7 +47,8 @@ png.save("HR.png")
 plt.imshow(first_img)
 plt.show()
 
-img_blurred = gaussian(first_img, sigma=gaussianSigma, multichannel=True)  # multichannel blurr so that 3rd channel is not blurred
+img_blurred = gaussian(first_img, sigma=gaussianSigma,
+                       multichannel=True)  # multichannel blurr so that 3rd channel is not blurred
 img = resize(img_blurred, (img_blurred.shape[0] // r, img_blurred.shape[1] // r))
 
 png = Image.fromarray((img * 255).round().astype(np.uint8))
@@ -60,7 +63,6 @@ net.cpu()
 result = net(img).detach().numpy()
 result = np.clip(PS(result[0], r), 0, 1)
 
-
 plt.imshow(result)
 plt.show()
 
@@ -72,9 +74,8 @@ print("PSNR:" + str(PSNR(result * 255, first_img * 255)))
 train_losses = np.load("../models/" + model_folder + "/loss_train.npy")
 test_losses = np.load("../models/" + model_folder + "/loss_test.npy")
 
-plt.plot(train_losses)
-plt.plot(test_losses)
+plt.plot(train_losses[100:-1], label="train losses")
+plt.plot(test_losses[100:-1], label="test losses")
 plt.yscale("log")
+plt.legend()
 plt.show()
-
-
