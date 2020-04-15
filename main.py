@@ -162,6 +162,10 @@ try:
         last_epoch_loss_train = epoch_loss_train
         last_epoch_loss_test = epoch_loss_test
 
+        print('Saving train and test loss')
+        np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
+        np.save(models_folder + '/' + model_name + '/loss_test', losses_test)
+
         if epoch % epoch_save_interval == 0:
             torch.save(net.state_dict(), model_dest + str(epoch + 1))
         epoch += 1
@@ -169,9 +173,6 @@ except KeyboardInterrupt:
     print("Press Ctrl-C to terminate while statement")
     pass
 
-    print('Saving train and test loss')
-    np.save(models_folder + '/' + model_name + '/loss_train', losses_train)
-    np.save(models_folder + '/' + model_name + '/loss_test', losses_test)
 
 end_time = datetime.datetime.now()
 print('Finished training at: ' + str(end_time))

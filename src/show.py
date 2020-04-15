@@ -14,6 +14,8 @@ import csv
 from skimage.filters import *
 
 gaussianSigma = 0.1  # gaussian sigma used when downscaling
+r = 3
+blur = 0.1
 
 # Constants
 C = 3  # colour channels
@@ -24,12 +26,6 @@ if len(sys.argv) < 2:
     raise Exception('No model_folder was given as system argument! Please use "python show.py model_folder"')
 
 model_folder = sys.argv[1]
-with open("../models/" + model_folder + "/results.csv") as csvfile:
-    reader = csv.reader(csvfile)
-    rows = list(reader)
-    headers = rows[0]
-    r = eval(rows[2][headers.index("r")])
-    blur = eval(rows[2][headers.index("blur")])
 
 def imshow(img):
     npimg = img.numpy()
@@ -78,8 +74,12 @@ print("PSNR:" + str(PSNR(result * 255, first_img * 255)))
 train_losses = np.load("../models/" + model_folder + "/loss_train.npy")
 test_losses = np.load("../models/" + model_folder + "/loss_test.npy")
 
-plt.plot(train_losses[100:-1], label="train losses")
-plt.plot(test_losses[100:-1], label="test losses")
+if len(train_losses) > 200:
+    plt.plot(train_losses[100: -1], label="train losses")
+    plt.plot(test_losses[1000: -1], label="test losses")
+else:
+    plt.plot(train_losses, label="train losses")
+    plt.plot(test_losses, label="test losses")
 plt.yscale("log")
 plt.legend()
 plt.show()
