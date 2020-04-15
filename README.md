@@ -11,6 +11,7 @@ In order to use other parameters the hyperparameters withing *main.py* (as of wr
   
 During training intermediate results can be inspected using *show.py*, where a folder containing the network data can be passed as a system argument.  
 An example of using *show.py* is `python show.py '2020-04-08_18-18-51_espcnn_r3'`.  
+
 The best model, intermediate models (every 100 epochs) and the training/test loss are saved during training in a folder named 'models', to run locally this folder needs to be created.
 
 ---
@@ -20,6 +21,7 @@ The data sets used for training and evaluation are publically available.
 set5, set14 http://vllab.ucmerced.edu/wlai24/LapSRN/  
 bsd500 https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html  
 bsd300 https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/  
+
 To evaluate our model these datasets need to be downloaded and the directories in the main.py need to be updated to match the corresponding dataset folders.
 
 ---
