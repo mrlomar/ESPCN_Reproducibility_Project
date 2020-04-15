@@ -1,9 +1,27 @@
 # ESPCN_Reproducibility_Project
-Get datasets from:
-set5, set14 http://vllab.ucmerced.edu/wlai24/LapSRN/
-bsd500 https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html
-bsd 300 https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/
+This repository consists of our attempt to reproduce the paper [Real-Time Single Image and Video Super-Resolution Using an EfficientSub-Pixel Convolutional Neural Network](https://arxiv.org/pdf/1609.05158v2.pdf) for the course CS4240 Deep Learning at Delft University of Technology.  
+The code used for training during the project are the *.py* files and a blogpost is available that gives more insight into our approach.  
 
-First test plan: 
-- train using T91 dataset
-- ...
+---
+
+## Training the network
+
+To train the network one only has to run *main.py* (for example with `python main.py`).  
+In order to use other parameters the hyperparameters withing *main.py* (as of writing line 18-35) can be edited before running the program.  
+  
+During training intermediate results can be inspected using *show.py*, where a folder containing the network data can be passed as a system argument.  
+An example of using *show.py* is `python show.py '2020-04-08_18-18-51_espcnn_r3'`.  
+
+---
+
+## The Data
+The data sets used for training and evaluation are publically available.  
+set5, set14 http://vllab.ucmerced.edu/wlai24/LapSRN/  
+bsd500 https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html  
+bsd300 https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/  
+
+---
+
+## Results
+We were unable to fully reproduce the results from [the paper](https://arxiv.org/pdf/1609.05158v2.pdf).
+However, we think that using our code the results from the paper could be reproducible if the hyperparameters are set correctly and enough training time is given.
