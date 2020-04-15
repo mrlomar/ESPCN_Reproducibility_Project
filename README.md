@@ -25,3 +25,8 @@ bsd300 https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/
 ## Results
 We were unable to fully reproduce the results from [the paper](https://arxiv.org/pdf/1609.05158v2.pdf).
 However, we think that using our code the results from the paper could be reproducible if the hyperparameters are set correctly and enough training time is given.
+
+---
+
+## Blog
+available [here](https://github.com/mrlomar/ESPCN_Reproducibility_Project/blob/master/blogpost.ipynb).
